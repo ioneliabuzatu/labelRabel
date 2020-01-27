@@ -13,24 +13,67 @@
 #include <opencv2/highgui/highgui.hpp>
 //#include <opencv2/optflow.hpp>
 #include <opencv2/video/tracking.hpp>
+using namespace cv;
 
 
-//class Gui_labeler {
-//
-//
-//public:
-//    const int flow_error;
-//    // constructors
-//    Gui_labeler(int window_size=15, int max_level=3, int iterations 10000; int flow_error_ = -1) :
-//        flow_error((flow_error_ > 0) ? flow_error_ : (window_size*4))
-//    {
-//
-//        something1 = cv::SparsePyrLKOpticalFlow::create();
-//
-//    }
-//
-//};
+void on_MouseHandle(int event, int x, int y, int flags, void* param);
+void DrawRectangle(Mat& img, Rect box);
 
+Rect g_rectangle;
+bool g_bDrawingBox = false;
+RNG g_rng(0);  // Generate random number
+
+void on_MouseHandle(int event, int x, int y, int flags, void* param) {
+    Mat& image = *(cv::Mat*) param;
+    switch (event) {
+        case EVENT_MOUSEMOVE: {    // When mouse moves, get the current rectangle's width and height
+            if (g_bDrawingBox) {
+                g_rectangle.width = x - g_rectangle.x;
+                g_rectangle.height = y - g_rectangle.y;
+            }
+        }
+            break;
+        case EVENT_LBUTTONDOWN: {  // when the left mouse button is pressed down,
+            //get the starting corner's coordinates of the rectangle
+            g_bDrawingBox = true;
+            g_rectangle = Rect(x, y, 0, 0);
+        }
+            break;
+        case EVENT_LBUTTONUP: {   //when the left mouse button is released,
+            //draw the rectangle
+            g_bDrawingBox = false;
+            if (g_rectangle.width < 0) {
+                g_rectangle.x += g_rectangle.width;
+                g_rectangle.width *= -1;
+            }
+
+            if (g_rectangle.height < 0) {
+                g_rectangle.y += g_rectangle.height;
+                g_rectangle.height *= -1;
+            }
+            DrawRectangle(image, g_rectangle);
+        }
+            break;
+    }
+
+    imshow("rABEL", image);
+}
+//
+//
+void DrawRectangle(cv::Mat& img, cv::Rect box)
+{
+    //Draw a rectangle with random color
+    cv::rectangle(img, box.tl(), box.br(), cv::Scalar(g_rng.uniform(0, 255),
+                                              g_rng.uniform(0,255),g_rng.uniform(0,255)));
+}
+static void onMouse(int event, int x, int y, int, void* imgptr){
+    if ( event != 1 ) return;     // only draw on lmouse down
+    Mat & img = (*(Mat*)imgptr); // first cast, then deref
+    Point pt1 = Point(x, y);
+    circle(img, pt1, 1, Scalar(0, 255, 0), 100, 8, 0);
+    imshow("rABEL", img);
+    waitKey(1);
+}
 
 int main() {
     int hello = 3;
@@ -110,6 +153,7 @@ int main() {
         image_index++;
         // std::cout << image_file_open << std::endl;
         // std::cout << cloned_image.size().width << std::endl;
+        cv::setMouseCallback(window_name, on_MouseHandle, &cloned_image);
         cv::imshow(window_name, cloned_image);
         cv::waitKey(0);
     }
