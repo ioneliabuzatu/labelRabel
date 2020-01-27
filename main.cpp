@@ -13,73 +13,66 @@
 #include <opencv2/highgui/highgui.hpp>
 //#include <opencv2/optflow.hpp>
 #include <opencv2/video/tracking.hpp>
+
 using namespace cv;
 
 
-void on_MouseHandle(int event, int x, int y, int flags, void* param);
-void DrawRectangle(Mat& img, Rect box);
+void mouse_callback(int event, int x, int y, int flags, void* param);
+void draw_rectangle(Mat& img, Rect box);
 
-Rect g_rectangle;
-bool g_bDrawingBox = false;
-RNG g_rng(0);  // Generate random number
+Rect save_rectangle;
+bool bool_drawing_box = false;
+RNG random_rgb(0);  // generate random number for bounding box
 
-void on_MouseHandle(int event, int x, int y, int flags, void* param) {
-    Mat& image = *(cv::Mat*) param;
+void mouse_callback(int event, int x, int y, int flags, void* param) {
+    cv::Mat& image = *(cv::Mat*) param;
     switch (event) {
-        case EVENT_MOUSEMOVE: {    // When mouse moves, get the current rectangle's width and height
-            if (g_bDrawingBox) {
-                g_rectangle.width = x - g_rectangle.x;
-                g_rectangle.height = y - g_rectangle.y;
+        case EVENT_MOUSEMOVE: {    // when mouse moves, get the current rectangle's width and height
+            if (bool_drawing_box) {
+                save_rectangle.width = x - save_rectangle.x;
+                save_rectangle.height = y - save_rectangle.y;
             }
         }
             break;
-        case EVENT_LBUTTONDOWN: {  // when the left mouse button is pressed down,
-            //get the starting corner's coordinates of the rectangle
-            g_bDrawingBox = true;
-            g_rectangle = Rect(x, y, 0, 0);
+        case EVENT_LBUTTONDOWN: {  // left mouse button is pressed down,
+            // starting corner's coordinates of the rectangle
+            bool_drawing_box = true;
+            save_rectangle = Rect(x, y, 0, 0);
         }
             break;
-        case EVENT_LBUTTONUP: {   //when the left mouse button is released,
+        case EVENT_LBUTTONUP: {   // left mouse button is released
             //draw the rectangle
-            g_bDrawingBox = false;
-            if (g_rectangle.width < 0) {
-                g_rectangle.x += g_rectangle.width;
-                g_rectangle.width *= -1;
+            bool_drawing_box = false;
+            if (save_rectangle.width < 0) {
+                save_rectangle.x += save_rectangle.width;
+                save_rectangle.width *= -1;
             }
 
-            if (g_rectangle.height < 0) {
-                g_rectangle.y += g_rectangle.height;
-                g_rectangle.height *= -1;
+            if (save_rectangle.height < 0) {
+                save_rectangle.y += save_rectangle.height;
+                save_rectangle.height *= -1;
             }
-            DrawRectangle(image, g_rectangle);
+            draw_rectangle(image, save_rectangle);
         }
             break;
     }
 
-    imshow("rABEL", image);
-}
-//
-//
-void DrawRectangle(cv::Mat& img, cv::Rect box)
-{
-    //Draw a rectangle with random color
-    cv::rectangle(img, box.tl(), box.br(), cv::Scalar(g_rng.uniform(0, 255),
-                                              g_rng.uniform(0,255),g_rng.uniform(0,255)));
-}
-static void onMouse(int event, int x, int y, int, void* imgptr){
-    if ( event != 1 ) return;     // only draw on lmouse down
-    Mat & img = (*(Mat*)imgptr); // first cast, then deref
-    Point pt1 = Point(x, y);
-    circle(img, pt1, 1, Scalar(0, 255, 0), 100, 8, 0);
-    imshow("rABEL", img);
-    waitKey(1);
+    cv::imshow("rABEL", image);
 }
 
+
+void draw_rectangle(cv::Mat& img, cv::Rect box)
+{
+    //Draw a rectangle with random color
+    cv::rectangle(img, box.tl(), box.br(), cv::Scalar(random_rgb.uniform(0, 255), random_rgb.uniform(0,255),random_rgb.uniform(0,255)));
+}
+
+
 int main() {
-    int hello = 3;
+    String hello = "Let's start this!";
     std::cout << hello << std::endl;
     std::vector<std::string> file_names_images;
-    const std::string images_directory = "/home/ionelia/labelRabel/images";
+    const std::string images_directory = "/home/ionelia/labelRabel/images"; // TODO: add args here
     struct dirent *ep;
     DIR *dir_open_images = opendir(images_directory.c_str());
 
@@ -153,7 +146,7 @@ int main() {
         image_index++;
         // std::cout << image_file_open << std::endl;
         // std::cout << cloned_image.size().width << std::endl;
-        cv::setMouseCallback(window_name, on_MouseHandle, &cloned_image);
+        cv::setMouseCallback(window_name, mouse_callback, &cloned_image);
         cv::imshow(window_name, cloned_image);
         cv::waitKey(0);
     }
