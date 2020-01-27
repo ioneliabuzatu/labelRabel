@@ -14,62 +14,11 @@
 //#include <opencv2/optflow.hpp>
 #include <opencv2/video/tracking.hpp>
 
-using namespace cv;
-
-
-void mouse_callback(int event, int x, int y, int flags, void* param);
-void draw_rectangle(Mat& img, Rect box);
-
-Rect save_rectangle;
-bool bool_drawing_box = false;
-RNG random_rgb(0);  // generate random number for bounding box
-
-void mouse_callback(int event, int x, int y, int flags, void* param) {
-    cv::Mat& image = *(cv::Mat*) param;
-    switch (event) {
-        case EVENT_MOUSEMOVE: {    // when mouse moves, get the current rectangle's width and height
-            if (bool_drawing_box) {
-                save_rectangle.width = x - save_rectangle.x;
-                save_rectangle.height = y - save_rectangle.y;
-            }
-        }
-            break;
-        case EVENT_LBUTTONDOWN: {  // left mouse button is pressed down,
-            // starting corner's coordinates of the rectangle
-            bool_drawing_box = true;
-            save_rectangle = Rect(x, y, 0, 0);
-        }
-            break;
-        case EVENT_LBUTTONUP: {   // left mouse button is released
-            //draw the rectangle
-            bool_drawing_box = false;
-            if (save_rectangle.width < 0) {
-                save_rectangle.x += save_rectangle.width;
-                save_rectangle.width *= -1;
-            }
-
-            if (save_rectangle.height < 0) {
-                save_rectangle.y += save_rectangle.height;
-                save_rectangle.height *= -1;
-            }
-            draw_rectangle(image, save_rectangle);
-        }
-            break;
-    }
-
-    cv::imshow("rABEL", image);
-}
-
-
-void draw_rectangle(cv::Mat& img, cv::Rect box)
-{
-    //Draw a rectangle with random color
-    cv::rectangle(img, box.tl(), box.br(), cv::Scalar(random_rgb.uniform(0, 255), random_rgb.uniform(0,255),random_rgb.uniform(0,255)));
-}
+#include "utils_labeler.cpp"
 
 
 int main() {
-    String hello = "Let's start this!";
+    std::string hello = "Let's start this!";
     std::cout << hello << std::endl;
     std::vector<std::string> file_names_images;
     const std::string images_directory = "/home/ionelia/labelRabel/images"; // TODO: add args here
@@ -105,10 +54,10 @@ int main() {
 
     // GUI
     int desiredWidth=640,desiredheight=480;
-    std::string const window_name = "rABEL";
+//    std::string const window_name = "rABEL";
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     cv::resizeWindow(window_name, 1280, 720);
-    cv::createTrackbar("image num", "rABEL", 0,file_names_images.size());
+    cv::createTrackbar("image num", window_name, 0,file_names_images.size());
 
 
     // open show images flow
