@@ -18,6 +18,7 @@
 
 
 int main() {
+    mouse_and_save_callback mouse_params;
     std::string hello = "Let's start this!";
     std::cout << hello << std::endl;
     std::vector<std::string> file_names_images;
@@ -53,12 +54,11 @@ int main() {
     }
 
     // GUI
-    int desiredWidth=640,desiredheight=480;
-//    std::string const window_name = "rABEL";
+    int desired_width=640,desired_height=480;
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     cv::resizeWindow(window_name, 1280, 720);
-    cv::createTrackbar("image num", window_name, 0,file_names_images.size());
-
+    int images_track = cv::createTrackbar(bar_images, window_name, 0,file_names_images.size());
+    int class_id  = cv::createTrackbar(bar_classes, window_name, 0, classes_txt.size());
 
     // open show images flow
     bool next_image_flow = true;
@@ -67,17 +67,14 @@ int main() {
     cv::Mat cloned_image;
 
     while (image_index < (int) file_names_images.size()) {
+
         if (next_image_flow) {
-            std::printf("Labelling image %i of %i...\n", image_index, (int) file_names_images.size());
             image_file_open = file_names_images.at(image_index);
+            std::printf("Labelling image %i of %i <%s>\n", image_index, (int) file_names_images.size(), image_file_open.c_str());
 
             // image resizing
             cv::Mat preview(cv::Size(100,100), CV_8UC3);
             cv::Mat full_image(cv::Size(1280, 720), CV_8UC3);
-//            cv::Mat frame(Size(full_image.cols, full_image.rows + preview.rows), CV_8UC3);
-
-//            cv::Rect full_rect_dst(Point2i(0, preview.rows), Size(frame.cols, frame.rows - preview.rows));
-//            cv::Mat full_image_roi = frame(full_rect_dst);
 
             cv::Mat read_image = cv::imread(image_file_open, cv::IMREAD_COLOR);
 
@@ -86,17 +83,34 @@ int main() {
 
             if (read_image.empty()) {
                 throw std::runtime_error("!!! Failed imread(): image not read");
-                // std::cout << "!!! Failed imread(): image not read" << std::endl;
             }
             cloned_image = read_image.clone();
 //            next_image_flow = false;
 
         }
+
+        cv::setTrackbarPos(bar_images, window_name, image_index);
+        cv::setTrackbarPos(bar_classes, window_name, 0);
         image_index++;
-        // std::cout << image_file_open << std::endl;
-        // std::cout << cloned_image.size().width << std::endl;
+
         cv::setMouseCallback(window_name, mouse_callback, &cloned_image);
         cv::imshow(window_name, cloned_image);
+//        mouse_params->img = cloned_image;
+//        cv::setMouseCallback(window_name, mouse_callback, (void*)&mouse_params);
+//        cv::imshow(window_name, mouse_params.img);
+
+        // save labels to txt file
+        std::string delimiter = ".";
+        std::string token = image_file_open.substr(0, image_file_open.find(delimiter)); // token is "scott"
+        const std::string name_labels = token + ".txt";
+//        printf("%s\n", name_labels.c_str());
+
+        std::ofstream save_labels_file(name_labels);
+        if(!save_labels_file) {
+            std::cout << "Cannot ope file, error!";
+            return 1;
+        }
+
         cv::waitKey(0);
     }
 }

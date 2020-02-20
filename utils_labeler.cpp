@@ -1,8 +1,15 @@
 #include "utils_labeler.h"
 
 
+struct mouse_and_save_callback {
+    cv::Mat img;
+
+};
+
 void mouse_callback(int event, int x, int y, int flags, void* param) {
-    cv::Mat& image = *(cv::Mat*) param;
+    mouse_and_save_callback* mouse_params = (mouse_and_save_callback*)param;
+    cv::Mat & image = mouse_params->img;
+//    cv::Mat& image = *(cv::Mat*) param;
     switch (event) {
         case cv::EVENT_MOUSEMOVE: {    // when mouse moves, get the current rectangle's width and height
             if (bool_drawing_box) {
